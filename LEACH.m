@@ -11,14 +11,13 @@ tic;
 [Area, Model] = setParameters(); % Set sensors and network parameters
 
 %%%%% Sensors configuration %%%%%
-createRandomScenario(Model, Area); % Create a random scenario
+createFixScenario(); % Create a fix scenario
 load Locations; % Load sensors location
 Sensors = configureSensors(Model, X, Y);
 ploter(Sensors, Model, Area); % Plot network
 
 %%%%% Parameters initialization %%%%%
 firstDead = 0; % First dead flag
-nCHs = 0; % Counter for CHs
 nDeads = 0; % Number of dead nodes
 
 initEnergy = 0; % Initial energy
@@ -65,7 +64,6 @@ for r = 1:1:Model.nRounds
 
     % This section operate for each epoch   
     members = []; % Member of each cluster per period
-    nCHs = 0; % Number of CHs per period
     
     % Counter for bit transmitted to BS and CHs
     srp = 0; % Counter number of sent routing packets
@@ -78,7 +76,7 @@ for r = 1:1:Model.nRounds
     RRP(r + 1) = rrp;  
     SDP(r + 1) = sdp;
     RDP(r + 1) = rdp;   
-    pause(0.0001); % Pause simulation
+    pause(0.001); % Pause simulation
     hold off; % Clear figure
     
     %%%%% Reset sensors per round and G management %%%%%
@@ -92,6 +90,13 @@ for r = 1:1:Model.nRounds
         for iSensor = 1:1:Model.n
             Sensors(iSensor).G = 0;
         end
+    end
+    
+    %%%%% Routing parameters config per round %%%%%
+    
+    Routing = Model.Routing;
+    if(strcmp(Routing.protocol, 'PROPOSED'))
+        Model.Routing.alpha = 1 - exp(1) ^ ((-Routing.landa) * (r-1));
     end
     
     %%%%% plot sensors %%%%%
@@ -118,8 +123,8 @@ for r = 1:1:Model.nRounds
         Sensors = exchangePackets(Sensors, Model, sender, 'Hello', receiver);   
     end 
     
-    % Sensors join to nearest CH 
-    Sensors = joinToNearestCH(Sensors, Model, CHs);
+    % Sensors join to CH 
+    Sensors = joinToCH(Sensors, Model, CHs);
 
     %%%%% plot network status in end of set-up phase %%%%%
     for iSensor = 1:Model.n
@@ -133,6 +138,7 @@ for r = 1:1:Model.nRounds
     
     %%%%% steady-state phase %%%%%
     nPackets = Model.nPackets; % Number of packets
+    
     for i = 1:1:1 
         % Plot network  
         nDeads = ploter(Sensors, Model, Area);
@@ -145,15 +151,7 @@ for r = 1:1:Model.nRounds
         end 
     end
     
-    
-    %%%%% Send Data packet from CH to sink after data aggregation %%%%%
-    for iCH = 1:length(CHs)
-        receiver = Model.n + 1; % Sink
-        sender = CHs(iCH).id; % CH 
-        Sensors = exchangePackets(Sensors, Model, sender, 'Data', receiver);           
-    end
-    
-    %%%%% send data packet directly from SN nodes(that aren't in each cluster) to Sink %%%%%%
+    %%%%% send data packet directly from CH to and SN nodes(that aren't in each cluster) to Sink %%%%%%
     for iSensor = 1:Model.n
         if(Sensors(iSensor).MCH == Sensors(Model.n + 1).id)
             receiver = Model.n + 1; % Sink
@@ -164,13 +162,13 @@ for r = 1:1:Model.nRounds
  
 %% STATISTICS
    
-    roundDeads(r + 1) = nDeads;
     SRP(r + 1) = srp;
     RRP(r + 1) = rrp;  
     SDP(r + 1) = sdp;
     RDP(r + 1) = rdp;
     
-    roundCHs(r + 1) = nCHs;
+    roundDeads(r + 1) = nDeads;
+    roundCHs(r + 1) = length(CHs);
     
     alive = 0;
     energySum = 0;
@@ -180,7 +178,7 @@ for r = 1:1:Model.nRounds
             energySum = energySum + Sensors(iSensor).e;
         end
     end
-    roundAlive(r) = alive;
+    roundAlive(r+1) = alive;
     roundEnergySum(r+1) = energySum;
     roundEnergyAvg(r+1) = energySum / alive;
     roundEnergyConsume(r+1)=(initEnergy-roundEnergySum(r+1))/Model.n;
@@ -208,7 +206,7 @@ disp('End of Simulation');
 toc;
 disp('Create Report...');
 
-filename = sprintf('leach%d.mat', Model.n);
+filename = sprintf('leach-%d-%s.mat', Model.n, Model.Routing.protocol);
 
 %% Save Report
 save(filename);

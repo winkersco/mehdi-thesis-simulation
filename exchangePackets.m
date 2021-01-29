@@ -13,25 +13,18 @@ function Sensors = exchangePackets(Sensors, Model, sender, PacketType, receiver)
    for iSensor = 1:length(sender)
        for jSensor = 1:length(receiver)
            distance = sqrt((Sensors(sender(iSensor)).xd - Sensors(receiver(jSensor)).xd) ^ 2 + (Sensors(sender(iSensor)).yd - Sensors(receiver(jSensor)).yd) ^ 2);
-           if (distance > Model.d0)
-               Sensors(sender(iSensor)).e = Sensors(sender(iSensor)).e - (Model.ETX * packetSize + Model.EMP * packetSize * (distance ^ 4));
-               % Sent a packet
-               if(Sensors(sender(iSensor)).e > 0)
-                   sap = sap + 1;                 
-               end
-           else
-               Sensors(sender(iSensor)).e = Sensors(sender(iSensor)).e - (Model.ETX * packetSize + Model.EFS * packetSize * (distance ^ 2));
-               % Sent a packet
-               if(Sensors(sender(iSensor)).e > 0)
-                   sap = sap + 1;                 
-               end
+          
+           Sensors(sender(iSensor)).e = Sensors(sender(iSensor)).e - (Model.EELEC * packetSize + Model.EMP * packetSize * (distance ^ 2));
+           % Sent a packet
+           if(Sensors(sender(iSensor)).e > 0)
+               sap = sap + 1;                 
            end
        end
    end
    
    % Energy dissipated from sensors for receive a packet
    for jSensor = 1:length(receiver)
-       Sensors(receiver(jSensor)).e = Sensors(receiver(jSensor)).e - ((Model.ERX + Model.EDA) * packetSize);
+       Sensors(receiver(jSensor)).e = Sensors(receiver(jSensor)).e - (Model.EELEC * packetSize);
    end
    
    for iSensor=1:length(sender)
