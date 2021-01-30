@@ -1,17 +1,15 @@
 function Sensors = exchangePackets(Sensors, Model, sender, PacketType, receiver)
 
-   global srp rrp sdp rdp;
+   global srp rrp sdp rdp reachToSink;
    sap = 0; % Send a packet
    rap = 0; % Receive a packet
-   if (strcmp(PacketType, 'Hello'))
-       packetSize = Model.helloPacketLength;
-   else
-       packetSize = Model.dataPacketLength;
-   end
    
    % Energy dissipated from sensors to send a packet 
    for iSensor = 1:length(sender)
        for jSensor = 1:length(receiver)
+           
+           packetSize = getPacketSize(Model, PacketType, sender(iSensor));
+           
            distance = sqrt((Sensors(sender(iSensor)).xd - Sensors(receiver(jSensor)).xd) ^ 2 + (Sensors(sender(iSensor)).yd - Sensors(receiver(jSensor)).yd) ^ 2);
           
            Sensors(sender(iSensor)).e = Sensors(sender(iSensor)).e - (Model.EELEC * packetSize + Model.EMP * packetSize * (distance ^ 2));
@@ -22,16 +20,18 @@ function Sensors = exchangePackets(Sensors, Model, sender, PacketType, receiver)
        end
    end
    
-   % Energy dissipated from sensors for receive a packet
-   for jSensor = 1:length(receiver)
-       Sensors(receiver(jSensor)).e = Sensors(receiver(jSensor)).e - (Model.EELEC * packetSize);
-   end
-   
    for iSensor=1:length(sender)
        for jSensor=1:length(receiver)
+           
+           packetSize = getPacketSize(Model, PacketType, sender(iSensor));
+           % Energy dissipated from sensors for receive a packet
+           Sensors(receiver(jSensor)).e = Sensors(receiver(jSensor)).e - (Model.EELEC * packetSize);
            % Received a packet
            if(Sensors(sender(iSensor)).e > 0 && Sensors(receiver(jSensor)).e > 0)
                rap = rap + 1;
+           end
+           if (Sensors(sender(iSensor)).e > 0 && Sensors(receiver(jSensor)).e > 0 && receiver(jSensor) == Model.n + 1 && ~strcmp(PacketType, 'Hello'))
+               reachToSink = reachToSink + 1;
            end
        end 
    end

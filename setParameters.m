@@ -19,7 +19,7 @@ p = 0.1;
 %%%%% energy model (all values in joules) %%%%% 
 
 % Initial energy
-E0 = 0.05; 
+E0 = 0.5; 
 
 % EELEC
 EELEC = 50 * 0.000000001;
@@ -29,23 +29,23 @@ EMP = 1.97 * 0.000000001;
 
 %%%%% Routing parameters %%%%%
 
-% Routing protocol (PROPOSED, LEACH, M-LEACH)
+% Routing protocol (PROPOSED, LEACH, LEACH-IMPROVE, EEM-LEACH)
 Routing.protocol = 'PROPOSED';
 
 % Proposed protocol parameters
-Routing.alpha = 0.5; % 0 < alpha < 1
+Routing.alpha = 0; % 0 < alpha < 1
 Routing.c1 = 0.5; % c1 + c2 = 1
 Routing.c2 = 0.5; % c1 + c2 = 1
 
 Routing.u = 0.5; % u + w = 1
 Routing.w = 0.5; % u + w = 1
 
-Routing.landa = 1 / 300; % Simulated landa
+Routing.landa = 1/1000; % Simulated landa
 
 %%%%% Run Time Parameters %%%%%
 
 % Maximum number of rounds
-nRounds = 6;
+nRounds = 10000;
 
 % Data packet size
 dataPacketLength = 4000;
@@ -66,7 +66,10 @@ DD = sqrt(Area.x ^ 2 + Area.y ^ 2);
 colors = ["#58e460","#9f5b55","#3314a9","#f896d1","#b9a230","#516d76","#7584ed","#543164","#068ef4","#950de3","#1cddb7","#d3e606","#da1b32","#f09f7e"];
 
 % Sensors with High priority
-highPriorities = [1];
+highPriorities = [];
+
+% Sensors Date rate
+dataRates = [3,1,3,3,3,2,2,2,2,2,1,3,1,2];
 
 %% Save in model
 Model.n = n;
@@ -85,5 +88,6 @@ Model.RR = RR;
 Model.DD = DD;
 Model.colors = colors;
 Model.highPriorities = highPriorities;
+Model.dataRates = dataRates;
 
 end

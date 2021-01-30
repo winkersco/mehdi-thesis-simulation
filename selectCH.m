@@ -23,7 +23,7 @@ function [CHs, Sensors]= selectCH(Sensors, Model, r)
                 end   
             end 
         end 
-    elseif(strcmp(Routing.protocol, 'EEM-LEACH') || strcmp(Routing.protocol, 'EEM-LEACH-DIRECT'))
+    elseif(strcmp(Routing.protocol, 'EEM-LEACH'))
         for iSensor = 1:1:n
             if(Sensors(iSensor).e > 0)   
                 mu = rand; 
